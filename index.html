@@ -1,0 +1,81 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Single Page Application</title>
+  <link rel="stylesheet" href="./style.css">
+  <script>
+    const SERVER = 'http://localhost:8080'
+    let students = []
+
+    const loadStudents = async () => {
+      try {
+        const response = await fetch(`${SERVER}/students`)
+        if (!response.ok) {
+          throw response
+        }
+        const data = await response.json()
+        return data
+      } catch (error) {
+        console.warn(error)
+      }
+    }
+
+    const updateStudentList = async () => {
+      const studentList = document.getElementById('studentList')
+      students = await loadStudents()
+      const studentRows = students.map(e => `
+        <tr>
+          <td>${e.name}</td>
+          <td>${e.class}</td>
+        </tr>
+      `).join('')
+      const studentTable = `
+        <table>
+          <tbody>
+            ${studentRows}
+          </tbody>
+        </table>
+      `
+      studentList.innerHTML = studentTable
+    }
+
+    window.onload = async () => {
+      updateStudentList()
+
+      const studentName = document.getElementById('studentName')
+      const studentClass = document.getElementById('studentClass')
+      const addButton = document.getElementById('addButton')
+      
+      addButton.onclick = async () => {
+        try {
+          const payload = {
+            name: studentName.value,
+            class: studentClass.value
+          }
+          await fetch(`${SERVER}/students`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+          })
+          updateStudentList()
+        } catch (error) {
+          console.warn(error)
+        }
+      }
+    }
+  </script>
+</head>
+<body>
+  <p>Baza de date studenti</p>
+  <div id="studentList"></div>
+  <div id="addForm">
+    Name <input type="text" id="studentName" />
+    Class: <input type="text" id="studentClass" />
+    <input type="button" value="+" id="addButton" />
+  </div>
+</body>
+</html>
